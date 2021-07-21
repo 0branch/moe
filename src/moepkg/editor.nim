@@ -305,6 +305,34 @@ proc insertIndetWhenPairOfParen(bufStatus: var BufferStatus,
         var newLine = repeat(' ', count).toRunes & closeParen
         bufStatus.buffer.insert(newLine, windowNode.currentLine + 1)
 
+proc isProcLine(bufStatus: BufferStatus,
+                windowNode: WindowNode): bool =
+
+  var
+    line = windowNode.currentLine
+    col = windowNode.currentColumn
+
+  if col > 1 and bufStatus.buffer[line][col - 1] == ru '=':
+    col.dec
+    var insideParen = false
+    while line >= 0:
+      if line == 0 and col == -1:
+        return
+      elif line > 0 and col == -1:
+        line.dec
+        col = bufStatus.buffer[line].high
+
+      if not insideParen and bufStatus.buffer[line][col] == ru ')':
+        insideParen = true
+
+
+      if insideParen and bufStatus.buffer[line][col] == ru '(':
+        insideParen = false
+        if (bufStatus.buffer[line].splitWhitespace)[0] == ru "proc":
+          return true
+
+      col.dec
+
 proc insertIndentInNim(bufStatus: var BufferStatus,
                        windowNode: WindowNode,
                        autoIndent: bool,
